@@ -1,5 +1,6 @@
 #include <GL/glew.h>
 #include "Window.h"
+#include "Scene.h"
 
 #include <vector>
 #include <iostream>
@@ -85,14 +86,50 @@ void Window::renderRayImage () {
     unsigned int screenHeight = cam->screenHeight ();
     QTime timer;
     timer.start ();
+    for (int var = 0; var < LIGHT_SAMPLING; ++var) {
+        //Scene::getInstance()->animateScene2(0.2f);
+    }
     viewer->setRayImage(rayTracer->render (camPos, viewDirection, upVector, rightVector,
-                        fieldOfView, aspectRatio, screenWidth, screenHeight, AA_MODE, WITH_SHADOWS, LIGHT_SAMPLING));
+                                           fieldOfView, aspectRatio, screenWidth, screenHeight, AA_MODE, WITH_SHADOWS, LIGHT_SAMPLING));
     statusBar()->showMessage(QString ("Raytracing performed in ") +
                              QString::number (timer.elapsed ()) +
                              QString ("ms at ") +
                              QString::number (screenWidth) + QString ("x") + QString::number (screenHeight) +
                              QString (" screen resolution"));
     viewer->setDisplayMode (GLViewer::RayDisplayMode);
+}
+
+void Window::recordVideo () {
+    qglviewer::Camera * cam = viewer->camera ();
+    RayTracer * rayTracer = RayTracer::getInstance ();
+    qglviewer::Vec p = cam->position ();
+    qglviewer::Vec d = cam->viewDirection ();
+    qglviewer::Vec u = cam->upVector ();
+    qglviewer::Vec r = cam->rightVector ();
+    Vec3Df camPos (p[0], p[1], p[2]);
+    Vec3Df viewDirection (d[0], d[1], d[2]);
+    Vec3Df upVector (u[0], u[1], u[2]);
+    Vec3Df rightVector (r[0], r[1], r[2]);
+    float fieldOfView = cam->fieldOfView ();
+    float aspectRatio = cam->aspectRatio ();
+    unsigned int screenWidth = cam->screenWidth ();
+    unsigned int screenHeight = cam->screenHeight ();
+    Scene * scene = Scene::getInstance();
+
+    QString fileName = QFileDialog::getSaveFileName (this,
+                                                    "Choose the name of the pictures composing the video",
+                                                    ".");
+    for (int i = 0; i < 200; ++i) {
+        scene->animateScene2(0.05f);
+        viewer->setRayImage(rayTracer->render (camPos, viewDirection, upVector, rightVector,
+                                               fieldOfView, aspectRatio, screenWidth, screenHeight, AA_MODE, WITH_SHADOWS, LIGHT_SAMPLING));
+        viewer->setDisplayMode (GLViewer::RayDisplayMode);
+        if (!fileName.isNull () && !fileName.isEmpty ()){
+            char str[10];
+            sprintf(str, "%03d.png", i);
+            viewer->getRayImage().save (QString(str).prepend(fileName));
+        }
+    }
 }
 
 void Window::setBGColor () {
@@ -123,8 +160,8 @@ void Window::exportRayImage () {
 }
 
 void Window::about () {
-    QMessageBox::about (this, 
-                        "About This Program", 
+    QMessageBox::about (this,
+                        "About This Program",
                         "<b>RayMini</b> <br> by <i>Tamy Boubekeur</i>.");
 }
 
@@ -161,7 +198,7 @@ void Window::initControlWidget () {
     QCheckBox * wireframeCheckBox = new QCheckBox ("Wireframe", previewGroupBox);
     connect (wireframeCheckBox, SIGNAL (toggled (bool)), viewer, SLOT (setWireframe (bool)));
     previewLayout->addWidget (wireframeCheckBox);
-   
+
     QButtonGroup * modeButtonGroup = new QButtonGroup (previewGroupBox);
     modeButtonGroup->setExclusive (true);
     QRadioButton * flatButton = new QRadioButton ("Flat", previewGroupBox);
@@ -193,6 +230,7 @@ void Window::initControlWidget () {
     AAComboBox->addItem("No AA");
     AAComboBox->addItem("AA: 2*2");
     AAComboBox->addItem("AA: 3*3");
+    AAComboBox->addItem("AA: Pentagon");
     AAComboBox->addItem("AA: Jitter");
     connect(AAComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT (setAAMode(int)));
     rayLayout->addWidget(AAComboBox);

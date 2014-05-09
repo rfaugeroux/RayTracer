@@ -38,6 +38,7 @@ public slots :
     void setAAMode(int _MODE);
     void setShadowMode(int state);
     void setLightSampling(int density);
+    void recordVideo();
     
 signals :
     void lightSamplingChanged(QString text);

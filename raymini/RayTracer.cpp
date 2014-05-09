@@ -147,41 +147,46 @@ Vec3Df RayTracer::computeRayColor(const Vec3Df & direction,
 
     Vec3Df w0 = -direction;
 
-    if(intersected_object.getMaterial().getGloss() == 1){
+    float gloss = intersected_object.getMaterial().getGloss();
+
+    Vec3Df reflectedColor(0.f, 0.f, 0.f);
+    Vec3Df baseColor(0.f, 0.f, 0.f);
+
+    if(gloss > 0.f){
         Vec3Df reflected_w0 = 2*Vec3Df::dotProduct(w0, n)*n - w0;
-        return computeRayColor(reflected_w0, intersection_point, objects, lights, WITH_SHADOWS, light_sampling);
+        reflectedColor = computeRayColor(reflected_w0, intersection_point, objects, lights, WITH_SHADOWS, light_sampling);
     }
 
-    // Loop over every light
-    for (unsigned int l_i = 0; l_i < lights.size(); ++l_i) {
-        const Light & light = lights[l_i];
+    if(gloss < 1.f) {
 
-        Vec3Df wi = light.getPos() - intersection_point;
-        wi.normalize();
+        // Loop over every light
+        for (unsigned int l_i = 0; l_i < lights.size(); ++l_i) {
+            const Light & light = lights[l_i];
+
+            Vec3Df wi = light.getPos() - intersection_point;
+            wi.normalize();
 
 
-        float visibility = 1.f;
+            float visibility = 1.f;
 
-        if (WITH_SHADOWS){
-            visibility = computeVisibility(intersection_point, light, light_sampling, objects);
+            if (WITH_SHADOWS){
+                visibility = computeVisibility(intersection_point, light, light_sampling, objects);
+            }
+
+            if (visibility == 0) continue;
+
+            float f = phongBRDF(w0, wi, n, intersected_object.getMaterial());
+
+            baseColor += visibility * f * light.getColor()* intersected_object.getMaterial().getColor()* 255.f;
         }
 
-        if (visibility == 0) continue;
-
-        float f = phongBRDF(w0, wi, n, intersected_object.getMaterial());
-
-        ray_color += visibility * f * light.getColor()* intersected_object.getMaterial().getColor()* 255.f;
-    }
-
-    ray_color /= lights.size();
-    if ((direction - Vec3Df(0.f, 0.f, -1.f)).getSquaredLength() < 0.0001){
-        //ray_color.init(200.f, 0.f, 30.f);
+        baseColor /= lights.size();
     }
 
     //Ex-BRDF
     //c = 255.f * ((intersectionPoint - minBb) / rangeBb);
 
-    return ray_color;
+    return Vec3Df::interpolate(baseColor, reflectedColor, gloss);
 }
 
 
@@ -261,13 +266,17 @@ float RayTracer::computeVisibility (const Vec3Df & point, const Light & light,
             for (unsigned int j = 0; j < objects.size(); ++j) {
                 const Object & o = objects.at(j);
                 Ray ray(point - o.getTrans(), direction);
-                if (ray.intersect(o)) visibility--;
+                if (ray.intersect(o)) {
+                    visibility--;
+                    break;
+                }
             }
         }
     }
     return visibility/(sampling_density*sampling_density);
 }
 
+/*
 void RayTracer::computeAO (const vector<Object> & objects, const Vertex & vertex, int AO_sampling) {
 
     for (int i = 0; i < AO_sampling; ++i) {
@@ -277,5 +286,6 @@ void RayTracer::computeAO (const vector<Object> & objects, const Vertex & vertex
     }
 
 }
+*/
 
 

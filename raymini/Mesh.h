@@ -42,6 +42,9 @@ public:
     void collectOrderedOneRing (std::vector<std::vector<unsigned int> > & oneRing) const;
     void computeDualEdgeMap (EdgeMapIndex & dualVMap1, EdgeMapIndex & dualVMap2);
     void markBorderEdges (EdgeMapIndex & edgeMap);
+    void scale (float s);
+    void scale (Vec3Df s);
+    void rotate (int AXIS);
 
     void renderGL (bool flat) const;
     

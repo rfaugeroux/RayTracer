@@ -1,5 +1,5 @@
 TEMPLATE = app
-TARGET   = raymini
+TARGET   = raytracer
 CONFIG  += qt opengl xml warn_on console release thread
 QT *= opengl xml
 HEADERS = Window.h \

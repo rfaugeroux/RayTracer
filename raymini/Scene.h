@@ -28,6 +28,8 @@ public:
     
     inline const BoundingBox & getBoundingBox () const { return bbox; }
     void updateBoundingBox ();
+    void rotateLight(float theta);
+    void animateScene2 (float speed);
 
 protected:
     Scene ();
@@ -35,6 +37,10 @@ protected:
     
 private:
     void buildDefaultScene ();
+    void buildOriginalScene1 ();
+    void buildOriginalScene2 ();
+    void buildOriginalScene3 ();
+
     std::vector<Object> objects;
     std::vector<Light> lights;
     BoundingBox bbox;

@@ -55,12 +55,20 @@ void DirectionGenerator::generateMultipleDirs(float p_x, float p_y, int MODE, ve
         dirs.push_back(generateDir(p_x + 0.25f, p_y - 0.25f));
         dirs.push_back(generateDir(p_x + 0.25f, p_y + 0.25f));
         break;
+    // 3x3 grid
     case 2:
-        dirs.push_back(generateDir(p_x, p_y));
-        dirs.push_back(generateDir(p_x - 0.25f, p_y - 0.25f));
-        dirs.push_back(generateDir(p_x - 0.25f, p_y + 0.25f));
-        dirs.push_back(generateDir(p_x + 0.25f, p_y - 0.25f));
-        dirs.push_back(generateDir(p_x + 0.25f, p_y + 0.25f));
+        for (int i = -1; i < 2; ++i) {
+            for (int j = -1; j < 2; ++j) {
+                dirs.push_back(generateDir(p_x + i * 0.5f, p_y + j * 0.5f));
+            }
+        }
+        break;
+    // Pentagon
+    case 3:
+        break;
+    // Jitter
+    case 4:
+
         break;
 
     default:

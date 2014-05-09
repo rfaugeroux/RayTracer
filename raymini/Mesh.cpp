@@ -183,12 +183,16 @@ void Mesh::renderGL (bool flat) const {
 void Mesh::loadOFF (const std::string & filename) {
     clear ();
     ifstream input (filename.c_str ());
-    if (!input)
+    if (!input) {
         throw Exception ("Failing opening the file.");
+        cerr << "Failing opening the file." << endl;
+    }
     string magic_word;
     input >> magic_word;
-    if (magic_word != "OFF")
+    if (magic_word != "OFF") {
         throw Exception ("Not an OFF file.");
+        cerr << "Not an OFF file." << endl;
+    }
     unsigned int numOfVertices, numOfTriangles, numOfWhat;
     input >> numOfVertices >> numOfTriangles >> numOfWhat;
     for (unsigned int i = 0; i < numOfVertices; i++) {
@@ -208,4 +212,56 @@ void Mesh::loadOFF (const std::string & filename) {
     }
     input.close ();
     recomputeSmoothVertexNormals (0);
+}
+
+void Mesh::scale (float s) {
+    for (unsigned int i = 0; i < vertices.size(); ++i) {
+        vertices[i].setPos(vertices[i].getPos() * s);
+    }
+}
+
+void Mesh::scale (Vec3Df s) {
+    for (unsigned int i = 0; i < vertices.size(); ++i) {
+        vertices[i].setPos(vertices[i].getPos() * s);
+    }
+}
+
+void Mesh::rotate (int AXIS) {
+    Vec3Df x;
+    Vec3Df y;
+    Vec3Df z;
+
+    switch (AXIS) {
+    // Rotate around X-axis
+    case 0:
+        x.init(1.f, 0.f, 0.f);
+        y.init(0.f, 0.f, 1.f);
+        z.init(0.f, -1.f, 0.f);
+        break;
+    // Rotate around Y-axis
+    case 1:
+        x.init(0.f, 0.f, 1.f);
+        y.init(0.f, 1.f, 0.f);
+        z.init(-1.f, 0.f, 0.f);
+        break;
+    // Rotate around Z-axis
+    case 2:
+        x.init(0.f, 1.f, 0.f);
+        y.init(-1.f, 0.f, 0.f);
+        z.init(0.f, 0.f, 1.f);
+        break;
+    default:
+        return;
+    }
+
+    for (unsigned int i = 0; i < vertices.size(); ++i) {
+        const Vec3Df & currPos = vertices[i].getPos();
+        Vec3Df newPos;
+        newPos[0] = Vec3Df::dotProduct(x, currPos);
+        newPos[1] = Vec3Df::dotProduct(y, currPos);
+        newPos[2] = Vec3Df::dotProduct(z, currPos);
+
+        vertices[i].setPos(newPos);
+    }
+
 }
