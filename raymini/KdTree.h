@@ -11,7 +11,7 @@ class KdTree
 {
 public:
     KdTree();
-    KdTree(const Mesh &mesh, unsigned int maxNumberTriangles=10);
+    KdTree(const Mesh &mesh, unsigned int maxNumberTriangles=1);
     KdTree(const KdTree & kdTree);
 
     KdTree & operator= (const KdTree & kdTree);
@@ -19,6 +19,7 @@ public:
     ~KdTree();
 
     const Node & getRoot() const;
+    unsigned int depth() const;
     void print() const;
 
 

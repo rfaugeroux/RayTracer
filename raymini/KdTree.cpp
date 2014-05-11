@@ -58,6 +58,10 @@ const Node & KdTree::getRoot() const{
     return *root;
 }
 
+unsigned int KdTree::depth () const {
+    return root->depth();
+}
+
 void KdTree::print() const{
     cout << "KdTree" << endl;
     cout << "------\n" << endl;

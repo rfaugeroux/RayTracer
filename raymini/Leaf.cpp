@@ -38,6 +38,10 @@ bool Leaf::isLeaf() const{
     return true;
 }
 
+unsigned int Leaf::depth() const{
+    return 1;
+}
+
 void Leaf::print(int depth) const{
     cout << "Leaf: Depth = " << depth << endl;
     cout << "Bounding box: " << endl;

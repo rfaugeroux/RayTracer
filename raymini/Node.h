@@ -18,7 +18,7 @@ public:
     virtual const std::vector<Triangle> & getTriangles() const = 0;
 
     virtual bool isLeaf() const =0;
-    //virtual bool intersect (const Ray & ray, std::vector<Triangle> & intersectable_triangles) const = 0;
+    virtual unsigned int depth() const =0;
     virtual void print(int depth) const = 0;
 
 protected:

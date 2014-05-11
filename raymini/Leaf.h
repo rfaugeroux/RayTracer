@@ -21,6 +21,7 @@ public:
     const std::vector<Triangle> & getTriangles() const;
 
     virtual bool isLeaf() const;
+    virtual unsigned int depth() const;
     virtual void print(int depth) const;
 
 private:

@@ -27,8 +27,8 @@ void Scene::destroyInstance () {
 }
 
 Scene::Scene () {
-    //buildDefaultScene ();
-    buildOriginalScene1();
+    buildDefaultScene ();
+    //buildOriginalScene1();
     updateBoundingBox ();
 }
 
@@ -54,32 +54,56 @@ void Scene::buildDefaultScene () {
     Object ground (groundMesh, groundMat);
     objects.push_back (ground);
 
+    Mesh leftWallMesh;
+    leftWallMesh.loadOFF ("models/ground.off");
+    leftWallMesh.rotate(1);
+    Material leftWallMat;
+    Object leftWall (leftWallMesh, leftWallMat);
+    leftWall.setTrans(Vec3Df(-2.f, 0.f, 2.f));
+    objects.push_back (leftWall);
+
+    //    Mesh rightWallMesh;
+    //    rightWallMesh.loadOFF ("models/ground.off");
+    //    rightWallMesh.rotate(1);
+    //    rightWallMesh.rotate(1);
+    //    rightWallMesh.rotate(1);
+    //    Material rightWallMat;
+    //    Object rightWall (rightWallMesh, rightWallMat);
+    //    rightWall.setTrans(Vec3Df(2.f, 0.f, 2.f));
+    //    objects.push_back (rightWall);
+
+    //    Mesh bottomWallMesh;
+    //    bottomWallMesh.loadOFF ("models/ground.off");
+    //    bottomWallMesh.rotate(0);
+    //    bottomWallMesh.rotate(0);
+    //    bottomWallMesh.rotate(0);
+    //    Material bottomWallMat;
+    //    Object bottomWall (bottomWallMesh, bottomWallMat);
+    //    bottomWall.setTrans(Vec3Df(0.f, 2.f, 2.f));
+    //    objects.push_back (bottomWall);
+
     Mesh ramMesh;
     ramMesh.loadOFF ("models/ram.off");
     Material ramMat (1.f, 1.f, 2.f, 0.f, Vec3Df (1.f, .6f, .2f));
     Object ram (ramMesh, ramMat);
+    cout << "number of triangles: " << ramMesh.getTriangles().size() << endl;
+    cout << "Depth of the kd tree: " << ram.getKdTree().depth() << endl;
     ram.setTrans (Vec3Df (0.4f, 0.6f, 0.f));
     objects.push_back (ram);
 
-    Mesh mirrorMesh;
-    mirrorMesh.loadOFF("models/mirror.off");
-    Material mirrorMat(1.f, 1.f, 2.f, 0.7f, Vec3Df(0.2f, 1.f, 1.f));
-    Object mirror(mirrorMesh, mirrorMat);
-    mirror.setTrans(Vec3Df(0.f, 0.f, 0.f));
-    objects.push_back(mirror);
-    //    for (int i = 0; i < 9; ++i) {
-    //        Mesh ramMesh;
-    //        ramMesh.loadOFF ("models/ram.off");
-    //        Object ram (ramMesh, ramMat);
-    //        ram.setTrans (Vec3Df (-2 + 2.f * (i%3), 2*i/3.f, 0.f));
-    //        objects.push_back (ram);
-    //    }
-    Mesh rhinoMesh;
-    rhinoMesh.loadOFF ("models/rhino.off");
-    Material rhinoMat (1.0f, 0.2f, 1.f, 0.f, Vec3Df (0.6f, 0.6f, 0.7f));
-    Object rhino (rhinoMesh, rhinoMat);
-    rhino.setTrans (Vec3Df (-1.f, -1.f, 0.4f));
-    objects.push_back (rhino);
+    //    Mesh mirrorMesh;
+    //    mirrorMesh.loadOFF("models/mirror.off");
+    //    Material mirrorMat(1.f, 1.f, 2.f, 0.7f, Vec3Df(0.2f, 1.f, 1.f));
+    //    Object mirror(mirrorMesh, mirrorMat);
+    //    mirror.setTrans(Vec3Df(0.f, 0.f, 0.f));
+    //    objects.push_back(mirror);
+
+    //    Mesh rhinoMesh;
+    //    rhinoMesh.loadOFF ("models/rhino.off");
+    //    Material rhinoMat (1.0f, 0.2f, 1.f, 0.f, Vec3Df (0.6f, 0.6f, 0.7f));
+    //    Object rhino (rhinoMesh, rhinoMat);
+    //    rhino.setTrans (Vec3Df (-1.f, -1.f, 0.4f));
+    //    objects.push_back (rhino);
     //    Mesh gargMesh;
     //    gargMesh.loadOFF ("models/gargoyle.off");
     //    Material gargMat (0.7f, 0.4f, 2.f, 0.f, Vec3Df (0.5f, 0.8f, 0.5f));

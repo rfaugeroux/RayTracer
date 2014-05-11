@@ -14,6 +14,7 @@
 
 #include "Vec3D.h"
 #include "Material.h"
+#include "Scene.h"
 #include "Object.h"
 #include "Light.h"
 #include "Ray.h"
@@ -38,8 +39,7 @@ public:
     float phongBRDF (Vec3Df w0, Vec3Df wi, Vec3Df n, const Material& mat) const;
     Vec3Df computeRayColor (const Vec3Df &direction,
                             const Vec3Df &camPos,
-                            const std::vector<Object> &objects,
-                            const std::vector<Light> &lights,
+                            const Scene *scene,
                             bool WITH_SHADOWS, int light_sampling) const;
     bool findClosestIntersection (const Vec3Df &direction,
                                   const Vec3Df &camPos,
@@ -49,6 +49,8 @@ public:
                                   unsigned int & intersected_object_idx) const;
     float computeVisibility (const Vec3Df &point, const Light & light,
                              int sampling_density, const std::vector<Object> & objects) const;
+    float computeAmbientOcclusion (const Vec3Df & intersection_point, const Vec3Df & normal,
+                                             const vector<Object> & objects, float radius, int AO_sampling) const;
 
 protected:
     inline RayTracer () {}

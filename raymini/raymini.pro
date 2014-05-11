@@ -1,6 +1,8 @@
 TEMPLATE = app
 TARGET   = raytracer
 CONFIG  += qt opengl xml warn_on console release thread
+QMAKE_CXXFLAGS += -fopenmp
+QMAKE_LFLAGS +=  -fopenmp
 QT *= opengl xml
 HEADERS = Window.h \
           GLViewer.h \

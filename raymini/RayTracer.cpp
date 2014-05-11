@@ -14,6 +14,7 @@
 #include <QProgressDialog>
 #include <vector>
 #include <math.h>
+#include <omp.h>
 
 #include <iostream>
 using namespace std;
@@ -56,39 +57,39 @@ QImage RayTracer::render (const Vec3Df & camPos,
 
     DirectionGenerator dirGen(direction, upVector, rightVector, fieldOfView, aspectRatio, screenWidth, screenHeight);
 
-    //Iterating through every screen's pixels
-    for (unsigned int i = 0; i < screenWidth; i++) {
-        progressDialog.setValue ((100*i)/screenWidth);
-        for (unsigned int j = 0; j < screenHeight; j++) {
+        //Iterating through every screen's pixels
+        //#pragma omp parallel for
+        for (unsigned int i = 0; i < screenWidth; i++) {
+            progressDialog.setValue ((100*i)/screenWidth);
+            for (unsigned int j = 0; j < screenHeight; j++) {
 
-            //Generation of the directions of the ray to be traced for this pixel
-            vector<Vec3Df> dirs;
-            dirGen.generateMultipleDirs((float) i, (float) j, AA_MODE, dirs);
+                //Generation of the directions of the ray to be traced for this pixel
+                vector<Vec3Df> dirs;
+                dirGen.generateMultipleDirs((float) i, (float) j, AA_MODE, dirs);
 
-            vector<Vec3Df> pixelColors;
+                vector<Vec3Df> pixelColors;
 
-            //Loop over every ray
-            for (unsigned int d_i = 0; d_i < dirs.size(); ++d_i) {
-                Vec3Df ray_color = computeRayColor(dirs[d_i],
-                                                   camPos,
-                                                   scene->getObjects(),
-                                                   scene->getLights(),
-                                                   WITH_SHADOWS,
-                                                   LIGHT_SAMPLING);
-                pixelColors.push_back(ray_color);
+                //Loop over every ray
+                for (unsigned int d_i = 0; d_i < dirs.size(); ++d_i) {
+                    Vec3Df ray_color = computeRayColor(dirs[d_i],
+                                                       camPos,
+                                                       scene,
+                                                       WITH_SHADOWS,
+                                                       LIGHT_SAMPLING);
+                    pixelColors.push_back(ray_color);
+                }
+
+                //Computation of the final color: the mean of the colors returned by each ray
+                Vec3Df c;
+                for (unsigned int c_i = 0; c_i < pixelColors.size(); ++c_i) {
+                    c += pixelColors[c_i];
+                }
+                c /= (float) pixelColors.size();
+
+                //Setting the color of the pixel
+                image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
             }
-
-            //Computation of the final color: the mean of the colors returned by each ray
-            Vec3Df c;
-            for (unsigned int c_i = 0; c_i < pixelColors.size(); ++c_i) {
-                c += pixelColors[c_i];
-            }
-            c /= (float) pixelColors.size();
-
-            //Setting the color of the pixel
-            image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
         }
-    }
     progressDialog.setValue (100);
 
     return image;
@@ -112,10 +113,12 @@ float RayTracer::phongBRDF(Vec3Df w0, Vec3Df wi, Vec3Df n, const Material& mat) 
 
 Vec3Df RayTracer::computeRayColor(const Vec3Df & direction,
                                   const Vec3Df & camPos,
-                                  const vector<Object> & objects,
-                                  const vector<Light> & lights,
+                                  const Scene * scene,
                                   bool WITH_SHADOWS,
                                   int light_sampling) const {
+
+    const vector<Light> & lights = scene->getLights();
+    const vector<Object> & objects = scene->getObjects();
 
 
     unsigned int intersected_object_idx;
@@ -152,11 +155,13 @@ Vec3Df RayTracer::computeRayColor(const Vec3Df & direction,
     Vec3Df reflectedColor(0.f, 0.f, 0.f);
     Vec3Df baseColor(0.f, 0.f, 0.f);
 
+    // If there is gloss, compute reflection
     if(gloss > 0.f){
         Vec3Df reflected_w0 = 2*Vec3Df::dotProduct(w0, n)*n - w0;
-        reflectedColor = computeRayColor(reflected_w0, intersection_point, objects, lights, WITH_SHADOWS, light_sampling);
+        reflectedColor = computeRayColor(reflected_w0, intersection_point, scene, WITH_SHADOWS, light_sampling);
     }
 
+    // If it is not pure reflection, compute Direct Ligthing
     if(gloss < 1.f) {
 
         // Loop over every light
@@ -183,10 +188,17 @@ Vec3Df RayTracer::computeRayColor(const Vec3Df & direction,
         baseColor /= lights.size();
     }
 
+    // Compute Ambient Occlusion
+
+    //float ambient_occlusion = computeAmbientOcclusion(intersection_point, n, objects,
+    //                                                  0.05f*scene->getBoundingBox().getRadius(),  5);
+
     //Ex-BRDF
     //c = 255.f * ((intersectionPoint - minBb) / rangeBb);
 
     return Vec3Df::interpolate(baseColor, reflectedColor, gloss);
+    //return ambient_occlusion * Vec3Df(240.f, 240.f, 240.f);
+
 }
 
 
@@ -276,16 +288,31 @@ float RayTracer::computeVisibility (const Vec3Df & point, const Light & light,
     return visibility/(sampling_density*sampling_density);
 }
 
-/*
-void RayTracer::computeAO (const vector<Object> & objects, const Vertex & vertex, int AO_sampling) {
 
+float RayTracer::computeAmbientOcclusion (const Vec3Df & intersection_point, const Vec3Df & normal,
+                                          const vector<Object> & objects, float radius, int AO_sampling) const {
+
+    Vec3Df u, v;
+    normal.getTwoOrthogonals(u, v);
+    Vec3Df direction;
+    Ray ray;
+
+    float ambient_occlusion = (float) AO_sampling;
     for (int i = 0; i < AO_sampling; ++i) {
         float theta = 0.5f * M_PI * (rand() % 100000)/100000.f;
         float phi = 2.f * M_PI * (rand() % 100000)/100000.f;
-
+        direction = cos(theta) * normal + sin(theta) * (cos(phi)*u + sin(phi)*v);
+        ray.setDirection(direction);
+        for (unsigned int i = 0; i < objects.size(); ++i) {
+            ray.setOrigin(intersection_point - objects[i].getTrans());
+            if ( ray.intersect(objects[i], radius)) {
+                ambient_occlusion--;
+                break;
+            }
+        }
     }
-
+    return ambient_occlusion/AO_sampling;
 }
-*/
+
 
 

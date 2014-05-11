@@ -28,8 +28,11 @@ public:
 
     inline const Vec3Df & getOrigin () const { return origin; }
     inline Vec3Df & getOrigin () { return origin; }
+    inline void setOrigin (const Vec3Df & orig) { origin = orig; }
     inline const Vec3Df & getDirection () const { return direction; }
     inline Vec3Df & getDirection () { return direction; }
+    inline void setDirection (const Vec3Df & dir) { direction = dir; }
+
 
     bool intersect (const BoundingBox & bbox, Vec3Df & intersectionPoint, float distMax=-1) const;
     bool intersect (const Vec3Df & p0, const Vec3Df & p1, const Vec3Df & p2,

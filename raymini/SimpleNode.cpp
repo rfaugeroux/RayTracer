@@ -125,6 +125,13 @@ bool SimpleNode::isLeaf() const{
     return false;
 }
 
+unsigned int SimpleNode::depth() const {
+    unsigned int leftDepth = 1 + leftTree->depth();
+    unsigned int rightDepth = 1 + rightTree->depth();
+
+    return leftDepth>rightDepth ? leftDepth:rightDepth;
+}
+
 void SimpleNode::print(int depth) const{
     cout << "SimpleNode: depth = " << depth << endl;
     cout << "Bounding box: " << bbox.getHeight()*bbox.getLength()*bbox.getWidth() << endl << endl;
