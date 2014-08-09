@@ -39,17 +39,12 @@ inline int clamp (float f, int inf, int sup) {
     return (v < inf ? inf : (v > sup ? sup : v));
 }
 
-QImage RayTracer::render (const Vec3Df & camPos,
-                          const Vec3Df & direction,
-                          const Vec3Df & upVector,
-                          const Vec3Df & rightVector,
-                          float fieldOfView,
-                          float aspectRatio,
-                          unsigned int screenWidth,
-                          unsigned int screenHeight,
-                          int AA_MODE,
-                          bool WITH_SHADOWS,
-                          int LIGHT_SAMPLING) {
+QImage RayTracer::render (const Vec3Df & camPos, const Vec3Df & direction,
+                          const Vec3Df & upVector, const Vec3Df & rightVector,
+                          float fieldOfView, float aspectRatio,
+                          unsigned int screenWidth, unsigned int screenHeight,
+                          int BRDF_MODE, int AA_MODE,
+                          bool WITH_SHADOWS, int LIGHT_SAMPLING) {
     QImage image (QSize (screenWidth, screenHeight), QImage::Format_RGB888);
     Scene * scene = Scene::getInstance ();
     QProgressDialog progressDialog ("Raytracing...", "Cancel", 0, 100);
@@ -57,45 +52,46 @@ QImage RayTracer::render (const Vec3Df & camPos,
 
     DirectionGenerator dirGen(direction, upVector, rightVector, fieldOfView, aspectRatio, screenWidth, screenHeight);
 
-        //Iterating through every screen's pixels
-        //#pragma omp parallel for
-        for (unsigned int i = 0; i < screenWidth; i++) {
-            progressDialog.setValue ((100*i)/screenWidth);
-            for (unsigned int j = 0; j < screenHeight; j++) {
+    //Iterating through every screen's pixels
+    //#pragma omp parallel for
+    for (unsigned int i = 0; i < screenWidth; i++) {
+        progressDialog.setValue ((100*i)/screenWidth);
+        for (unsigned int j = 0; j < screenHeight; j++) {
 
-                //Generation of the directions of the ray to be traced for this pixel
-                vector<Vec3Df> dirs;
-                dirGen.generateMultipleDirs((float) i, (float) j, AA_MODE, dirs);
+            //Generation of the directions of the ray to be traced for this pixel
+            vector<Vec3Df> dirs;
+            dirGen.generateMultipleDirs((float) i, (float) j, AA_MODE, dirs);
 
-                vector<Vec3Df> pixelColors;
+            vector<Vec3Df> pixelColors;
 
-                //Loop over every ray
-                for (unsigned int d_i = 0; d_i < dirs.size(); ++d_i) {
-                    Vec3Df ray_color = computeRayColor(dirs[d_i],
-                                                       camPos,
-                                                       scene,
-                                                       WITH_SHADOWS,
-                                                       LIGHT_SAMPLING);
-                    pixelColors.push_back(ray_color);
-                }
-
-                //Computation of the final color: the mean of the colors returned by each ray
-                Vec3Df c;
-                for (unsigned int c_i = 0; c_i < pixelColors.size(); ++c_i) {
-                    c += pixelColors[c_i];
-                }
-                c /= (float) pixelColors.size();
-
-                //Setting the color of the pixel
-                image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
+            //Loop over every ray
+            for (unsigned int d_i = 0; d_i < dirs.size(); ++d_i) {
+                Vec3Df ray_color = computeRayColor(dirs[d_i],
+                                                   camPos,
+                                                   scene,
+                                                   BRDF_MODE,
+                                                   WITH_SHADOWS,
+                                                   LIGHT_SAMPLING);
+                pixelColors.push_back(ray_color);
             }
+
+            //Computation of the final color: the mean of the colors returned by each ray
+            Vec3Df c;
+            for (unsigned int c_i = 0; c_i < pixelColors.size(); ++c_i) {
+                c += pixelColors[c_i];
+            }
+            c /= (float) pixelColors.size();
+
+            //Setting the color of the pixel
+            image.setPixel (i, j, qRgb (clamp (c[0], 0, 255), clamp (c[1], 0, 255), clamp (c[2], 0, 255)));
         }
+    }
     progressDialog.setValue (100);
 
     return image;
 }
 
-float RayTracer::phongBRDF(Vec3Df w0, Vec3Df wi, Vec3Df n, const Material& mat) const{
+float RayTracer::phongBRDF(const Vec3Df & w0, const Vec3Df & wi, const Vec3Df & n, const Material& mat) const{
 
     Vec3Df r = 2*Vec3Df::dotProduct(wi, n)*n - wi;
 
@@ -111,11 +107,46 @@ float RayTracer::phongBRDF(Vec3Df w0, Vec3Df wi, Vec3Df n, const Material& mat) 
     return coeff;
 }
 
-Vec3Df RayTracer::computeRayColor(const Vec3Df & direction,
-                                  const Vec3Df & camPos,
-                                  const Scene * scene,
-                                  bool WITH_SHADOWS,
-                                  int light_sampling) const {
+float RayTracer::CookTorranceBRDF(const Vec3Df & w0, const Vec3Df & wi, const Vec3Df & n, const Material& mat) const{
+
+    Vec3Df half_vector = w0 + wi;
+    half_vector.normalize();
+    float NdotL        = max(0.f, Vec3Df::dotProduct( n, w0 ));
+    float NdotH        = max(0.f,  Vec3Df::dotProduct( n, half_vector ));
+    float NdotV        = max(0.f, Vec3Df::dotProduct( n, wi ));
+    float VdotH        = max(0.f, Vec3Df::dotProduct( wi, half_vector ));
+    float roughness_square  = 2.f / ( mat.getShininess() + 2.f);
+
+
+    // Computation of the geometric term
+    float geo_num1   = 2.0f * NdotH;
+    float geo1 = (geo_num1 * NdotV ) / VdotH;
+    float geo2 = (geo_num1 * NdotL ) / VdotH;
+    float geo  = min( 1.0f, min(geo1, geo2) );
+
+    // Computation of the roughness term  (microfacet Beckmann's distribution)
+    float roughness;
+    float r1 = 1.0f / ( 4.0f * roughness_square * pow( NdotH, 4 ) );
+    float r2 = (NdotH * NdotH - 1.0f) / (roughness_square * NdotH * NdotH);
+    roughness = r1 * exp( r2 );
+
+
+    // Computation of the Fresnel term
+    float refractionCoeff = 0.1f;
+    float fresnel = pow( 1.0f - VdotH, 5.0f );
+    fresnel *= ( 1.0f - refractionCoeff);
+    fresnel += refractionCoeff;
+
+    // Computation of the specular term
+    float specular = (fresnel * geo * roughness ) / (M_PI * NdotV * NdotL);
+
+    float coeff = max(0.0f, NdotL) * (mat.getSpecular() * specular + mat.getDiffuse());
+
+    return coeff;
+}
+
+Vec3Df RayTracer::computeRayColor(const Vec3Df & direction, const Vec3Df & camPos, const Scene * scene,
+                                  int BRDF_MODE, bool WITH_SHADOWS, int light_sampling) const {
 
     const vector<Light> & lights = scene->getLights();
     const vector<Object> & objects = scene->getObjects();
@@ -158,7 +189,7 @@ Vec3Df RayTracer::computeRayColor(const Vec3Df & direction,
     // If there is gloss, compute reflection
     if(gloss > 0.f){
         Vec3Df reflected_w0 = 2*Vec3Df::dotProduct(w0, n)*n - w0;
-        reflectedColor = computeRayColor(reflected_w0, intersection_point, scene, WITH_SHADOWS, light_sampling);
+        reflectedColor = computeRayColor(reflected_w0, intersection_point, scene, BRDF_MODE, WITH_SHADOWS, light_sampling);
     }
 
     // If it is not pure reflection, compute Direct Ligthing
@@ -180,7 +211,18 @@ Vec3Df RayTracer::computeRayColor(const Vec3Df & direction,
 
             if (visibility == 0) continue;
 
-            float f = phongBRDF(w0, wi, n, intersected_object.getMaterial());
+            float f;
+            switch (BRDF_MODE) {
+            case 0:
+                f = phongBRDF(w0, wi, n, intersected_object.getMaterial());
+                break;
+            case 1:
+                f = CookTorranceBRDF(w0, wi, n, intersected_object.getMaterial());
+                break;
+            default:
+                f = 1;
+                break;
+            }
 
             baseColor += visibility * f * light.getColor()* intersected_object.getMaterial().getColor()* 255.f;
         }
@@ -191,7 +233,7 @@ Vec3Df RayTracer::computeRayColor(const Vec3Df & direction,
     // Compute Ambient Occlusion
 
     //float ambient_occlusion = computeAmbientOcclusion(intersection_point, n, objects,
-    //                                                  0.05f*scene->getBoundingBox().getRadius(),  5);
+    //                                                  0.05f*scene->getBoundingBox().getRadius(),  20);
 
     //Ex-BRDF
     //c = 255.f * ((intersectionPoint - minBb) / rangeBb);

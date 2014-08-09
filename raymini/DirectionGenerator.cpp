@@ -1,5 +1,7 @@
 #include "DirectionGenerator.h"
 #include <iostream>
+#include <cstdlib>
+#include <cmath>
 
 using namespace std;
 
@@ -63,14 +65,29 @@ void DirectionGenerator::generateMultipleDirs(float p_x, float p_y, int MODE, ve
             }
         }
         break;
-    // Pentagon
+    // Rotated grid (2x2 grid with rotation of angle arctan(1/2))
     case 3:
+    {
+        float r = sqrt(5.f/32.f);
+        dirs.push_back(generateDir(p_x + r * cos( M_PI / 4.f + atan (1.f / 2.f) ), p_y + r * sin(M_PI / 4.f + atan (1.f / 2.f) ) ));
+        dirs.push_back(generateDir(p_x + r * cos(3 * M_PI / 4.f + atan(1.f / 2.f)), p_y + r * sin(3 * M_PI / 4.f + atan (1.f / 2.f ) )));
+        dirs.push_back(generateDir(p_x + r * cos(5 * M_PI / 4.f + atan(1.f / 2.f)), p_y + r * sin(5 * M_PI/ 4.f + atan ( 1.f / 2.f) ) ));
+        dirs.push_back(generateDir(p_x + r * cos(7 * M_PI/ 4.f + atan(1.f / 2.f) ), p_y + r * sin(7 * M_PI / 4.f + atan (1.f / 2.f) ) ));
         break;
-    // Jitter
+    }
+    // Jitter in a 5x5 grid
     case 4:
-
+    {
+        srand (static_cast <unsigned> (time(0)));
+        for (int i = 0; i < 5; ++i) {
+            for (int j = 0; j < 5; ++j) {
+                float r1 = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/0.2f));
+                float r2 = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/0.2f));
+                dirs.push_back(generateDir(p_x -0.5f + i * 0.2f + r1, p_y - 0.5f + j * 0.2f + r2));
+            }
+        }
+    }
         break;
-
     default:
         dirs.push_back(generateDir(p_x, p_y));
         break;

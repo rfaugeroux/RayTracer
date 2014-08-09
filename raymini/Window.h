@@ -35,6 +35,7 @@ public slots :
     void exportGLImage ();
     void exportRayImage ();
     void about ();
+    void setBRDF(int MODE);
     void setAAMode(int _MODE);
     void setShadowMode(int state);
     void setLightSampling(int density);
@@ -50,6 +51,7 @@ private :
     QGroupBox * controlWidget;
     QString currentDirectory;
 
+    int BRDF_MODE;
     int AA_MODE;
     bool WITH_SHADOWS;
     int LIGHT_SAMPLING;

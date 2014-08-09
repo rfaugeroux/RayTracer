@@ -60,6 +60,7 @@ Window::Window () : QMainWindow (NULL) {
     controlDockWidget->setFeatures (QDockWidget::AllDockWidgetFeatures);
     statusBar()->showMessage("");
 
+    BRDF_MODE = 0;
     AA_MODE = 0;
     WITH_SHADOWS = false;
     LIGHT_SAMPLING = 1;
@@ -86,11 +87,9 @@ void Window::renderRayImage () {
     unsigned int screenHeight = cam->screenHeight ();
     QTime timer;
     timer.start ();
-    for (int var = 0; var < LIGHT_SAMPLING; ++var) {
-        //Scene::getInstance()->animateScene2(0.2f);
-    }
     viewer->setRayImage(rayTracer->render (camPos, viewDirection, upVector, rightVector,
-                                           fieldOfView, aspectRatio, screenWidth, screenHeight, AA_MODE, WITH_SHADOWS, LIGHT_SAMPLING));
+                                           fieldOfView, aspectRatio, screenWidth, screenHeight,
+                                           BRDF_MODE, AA_MODE, WITH_SHADOWS, LIGHT_SAMPLING));
     statusBar()->showMessage(QString ("Raytracing performed in ") +
                              QString::number (timer.elapsed ()) +
                              QString ("ms at ") +
@@ -122,7 +121,8 @@ void Window::recordVideo () {
     for (int i = 0; i < 200; ++i) {
         scene->animateScene2(0.05f);
         viewer->setRayImage(rayTracer->render (camPos, viewDirection, upVector, rightVector,
-                                               fieldOfView, aspectRatio, screenWidth, screenHeight, AA_MODE, WITH_SHADOWS, LIGHT_SAMPLING));
+                                               fieldOfView, aspectRatio, screenWidth, screenHeight,
+                                               BRDF_MODE, AA_MODE, WITH_SHADOWS, LIGHT_SAMPLING));
         viewer->setDisplayMode (GLViewer::RayDisplayMode);
         if (!fileName.isNull () && !fileName.isEmpty ()){
             char str[10];
@@ -163,6 +163,10 @@ void Window::about () {
     QMessageBox::about (this,
                         "About This Program",
                         "<b>RayMini</b> <br> by <i>Tamy Boubekeur</i>.");
+}
+
+void Window::setBRDF(int MODE) {
+    BRDF_MODE = MODE;
 }
 
 void Window::setAAMode(int _AA_MODE) {
@@ -226,11 +230,16 @@ void Window::initControlWidget () {
     QPushButton * saveButton  = new QPushButton ("Save", rayGroupBox);
     connect (saveButton, SIGNAL (clicked ()) , this, SLOT (exportRayImage ()));
     rayLayout->addWidget (saveButton);
+    QComboBox * BRDFComboBox = new QComboBox(rayGroupBox);
+    BRDFComboBox->addItem("Phong");
+    BRDFComboBox->addItem("Cook-Torrance");
+    connect(BRDFComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT (setBRDF(int)));
+    rayLayout->addWidget(BRDFComboBox);
     QComboBox * AAComboBox = new QComboBox(rayGroupBox);
     AAComboBox->addItem("No AA");
     AAComboBox->addItem("AA: 2*2");
     AAComboBox->addItem("AA: 3*3");
-    AAComboBox->addItem("AA: Pentagon");
+    AAComboBox->addItem("AA: Rotated Grid");
     AAComboBox->addItem("AA: Jitter");
     connect(AAComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT (setAAMode(int)));
     rayLayout->addWidget(AAComboBox);

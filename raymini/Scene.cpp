@@ -54,13 +54,13 @@ void Scene::buildDefaultScene () {
     Object ground (groundMesh, groundMat);
     objects.push_back (ground);
 
-    Mesh leftWallMesh;
-    leftWallMesh.loadOFF ("models/ground.off");
-    leftWallMesh.rotate(1);
-    Material leftWallMat;
-    Object leftWall (leftWallMesh, leftWallMat);
-    leftWall.setTrans(Vec3Df(-2.f, 0.f, 2.f));
-    objects.push_back (leftWall);
+    //    Mesh leftWallMesh;
+    //    leftWallMesh.loadOFF ("models/ground.off");
+    //    leftWallMesh.rotate(1);
+    //    Material leftWallMat;
+    //    Object leftWall (leftWallMesh, leftWallMat);
+    //    leftWall.setTrans(Vec3Df(-2.f, 0.f, 2.f));
+    //    objects.push_back (leftWall);
 
     //    Mesh rightWallMesh;
     //    rightWallMesh.loadOFF ("models/ground.off");
@@ -82,33 +82,51 @@ void Scene::buildDefaultScene () {
     //    bottomWall.setTrans(Vec3Df(0.f, 2.f, 2.f));
     //    objects.push_back (bottomWall);
 
+    //    Mesh boxMesh;
+    //    boxMesh.loadOFF ("models/box.off");
+    //    boxMesh.scale(Vec3Df(0.8f, 0.8f, 1.5f));
+    //    Material boxMat;
+    //    Object box (boxMesh, boxMat);
+    //    box.setTrans(Vec3Df(-1.2f, -0.8f, 0.f));
+    //    objects.push_back (box);
+
     Mesh ramMesh;
     ramMesh.loadOFF ("models/ram.off");
     Material ramMat (1.f, 1.f, 2.f, 0.f, Vec3Df (1.f, .6f, .2f));
     Object ram (ramMesh, ramMat);
-    cout << "number of triangles: " << ramMesh.getTriangles().size() << endl;
-    cout << "Depth of the kd tree: " << ram.getKdTree().depth() << endl;
     ram.setTrans (Vec3Df (0.4f, 0.6f, 0.f));
     objects.push_back (ram);
 
-    //    Mesh mirrorMesh;
-    //    mirrorMesh.loadOFF("models/mirror.off");
-    //    Material mirrorMat(1.f, 1.f, 2.f, 0.7f, Vec3Df(0.2f, 1.f, 1.f));
-    //    Object mirror(mirrorMesh, mirrorMat);
-    //    mirror.setTrans(Vec3Df(0.f, 0.f, 0.f));
-    //    objects.push_back(mirror);
+    //    for (int i = 0; i < 5; ++i) {
+    //        for (int j = 0; j < 5; ++j) {
+    //            Mesh bushMesh;
+    //            bushMesh.loadOFF ("models/bush.off");
+    //            Material bushMat (1.f, 1.f, 2.f, 0.f, Vec3Df (0.2f, 1.f, .2f));
+    //            Object bush (bushMesh, bushMat);
+    //            bush.setTrans (Vec3Df (-1.f + i/2.f, -1.f + j/2.f, 0.f));
+    //            objects.push_back (bush);
+    //        }
+
+    //    }
+
+    Mesh mirrorMesh;
+    mirrorMesh.loadOFF("models/mirror.off");
+    Material mirrorMat(1.f, 1.f, 2.f, 1.f, Vec3Df(0.2f, 1.f, 1.f));
+    Object mirror(mirrorMesh, mirrorMat);
+    mirror.setTrans(Vec3Df(0.f, 0.f, 0.f));
+    objects.push_back(mirror);
 
     //    Mesh rhinoMesh;
     //    rhinoMesh.loadOFF ("models/rhino.off");
-    //    Material rhinoMat (1.0f, 0.2f, 1.f, 0.f, Vec3Df (0.6f, 0.6f, 0.7f));
+    //    Material rhinoMat (1.0f, 0.2f, 1.f, 0.1f, Vec3Df (0.6f, 0.6f, 0.7f));
     //    Object rhino (rhinoMesh, rhinoMat);
     //    rhino.setTrans (Vec3Df (-1.f, -1.f, 0.4f));
     //    objects.push_back (rhino);
     //    Mesh gargMesh;
     //    gargMesh.loadOFF ("models/gargoyle.off");
-    //    Material gargMat (0.7f, 0.4f, 2.f, 0.f, Vec3Df (0.5f, 0.8f, 0.5f));
+    //    Material gargMat (0.7f, 0.4f, 2.f, 0.1f, Vec3Df (0.5f, 0.8f, 0.5f));
     //    Object garg (gargMesh, gargMat);
-    //    garg.setTrans (Vec3Df (-1.f, 1.0f, 0.1f));
+    //    garg.setTrans (Vec3Df (-1.5f, 1.0f, 0.1f));
     //    objects.push_back (garg);
 
     //    Mesh monkeyMesh;
@@ -120,10 +138,10 @@ void Scene::buildDefaultScene () {
 
     //    Mesh sphereMesh;
     //    sphereMesh.loadOFF("models/sphere.off");
-    //    sphereMesh.scale(0.5f);
-    //    Material sphereMat (1.0f, 0.2f, 2.f, 1.f, Vec3Df (0.6f, 0.6f, 0.7f));
+    //    sphereMesh.scale(0.3f);
+    //    Material sphereMat (1.0f, 0.2f, 2.f, 0.6f, Vec3Df (0.6f, 0.6f, 0.7f));
     //    Object sphere(sphereMesh, sphereMat);
-    //    sphere.setTrans (Vec3Df (0.8f, 0.6f, 0.f));
+    //    sphere.setTrans (Vec3Df (-1.f, 0.9f, -0.1f));
     //    objects.push_back (sphere);
 
     //    Mesh triangleMesh;
@@ -134,7 +152,7 @@ void Scene::buildDefaultScene () {
     //    objects.push_back (triangle);
 
 
-    Light l0 (Vec3Df (2.0f, -2.0f, 10.0f), Vec3Df(-1.f, 0.f, 0.f), 1.f, Vec3Df (1.0f, 1.0f, 1.0f), 1.0f);
+    Light l0 (Vec3Df (3.0f, 1.5f, 6.0f), Vec3Df(-1.f, 0.f, 0.f), 1.f, Vec3Df (1.0f, 1.0f, 1.0f), 1.0f);
     lights.push_back (l0);
 
     //    Light l1 (Vec3Df (-10.0f, 10.0f, -10.0f), Vec3Df(-1.f, 0.f, 0.f), 1.0f, Vec3Df (1.0f, 1.0f, 1.0f), 1.0f);
@@ -167,14 +185,35 @@ void Scene::buildOriginalScene1 () {
     objects.push_back (bottomWall);
 
 
+    Vec3Df boxColor(242/255.f, 209/255.f, 116/255.f);
+
     // First statue
     Mesh box1Mesh;
     box1Mesh.loadOFF ("models/box.off");
-    box1Mesh.scale(Vec3Df(0.9f, 0.9f, 0.6f));
-    Material box1Mat(1.f, 1.f, 2.f, 0.f, Vec3Df(242/255.f, 209/255.f, 116/255.f));
+    box1Mesh.scale(Vec3Df(0.7f, 0.7f, 0.6f));
+    Material box1Mat(1.f, 1.f, 2.f, 0.f, boxColor);
     Object box1 (box1Mesh, box1Mat);
     box1.setTrans(Vec3Df(-1.3f, -2.6f, 0.f));
     objects.push_back (box1);
+    /*
+    Mesh front1Mesh;
+    front1Mesh.loadOFF ("models/groundX.off");
+    front1Mesh.scale(0.2f);
+    Material front1Mat(1.f, 1.f, 2.f, 0.f, boxColor);
+    Object front1 (front1Mesh, front1Mat);
+    front1.setTrans(Vec3Df(-0.6f, -2.3f, 0.2f));
+    objects.push_back (front1);
+
+    Mesh right1Mesh;
+    right1Mesh.loadOFF ("models/groundY.off");
+    right1Mesh.scale(0.2f);
+    Material right1Mat(1.f, 1.f, 2.f, 0.f, boxColor);
+    Object right1 (right1Mesh, right1Mat);
+    right1.setTrans(Vec3Df(-1.f, -2.6f, 0.2f));
+    objects.push_back (right1);
+    */
+
+
 
     Mesh manMesh;
     manMesh.loadOFF ("models/soldier.off");
@@ -195,7 +234,7 @@ void Scene::buildOriginalScene1 () {
     Mesh box2Mesh;
     box2Mesh.loadOFF ("models/box.off");
     box2Mesh.scale(Vec3Df(0.7f, 0.7f, 1.2f));
-    Material box2Mat(1.f, 1.f, 2.f, 0.f, Vec3Df(242/255.f, 209/255.f, 116/255.f));
+    Material box2Mat(1.f, 1.f, 2.f, 0.f, boxColor);
     Object box2 (box2Mesh, box2Mat);
     box2.setTrans(Vec3Df(-1.3f, 0.f, 0.f));
     objects.push_back (box2);
@@ -206,7 +245,7 @@ void Scene::buildOriginalScene1 () {
     vaseMesh.rotate(0);
     vaseMesh.rotate(0);
     vaseMesh.scale(0.7f);
-    Material vaseMat(1.f, 1.f, 2.f, 0.f, Vec3Df(20/255.f, 24/255.f, 100/255.f));
+    Material vaseMat(1.f, 1.f, 2.f, 0.05f, Vec3Df(20/255.f, 24/255.f, 100/255.f));
     Object vase (vaseMesh, vaseMat);
     vase.setTrans(Vec3Df(-1.3f, 0.7f, 1.2f));
     objects.push_back (vase);
@@ -215,7 +254,7 @@ void Scene::buildOriginalScene1 () {
     Mesh box3Mesh;
     box3Mesh.loadOFF ("models/box.off");
     box3Mesh.scale(Vec3Df(0.7f, 0.7f, 1.f));
-    Material box3Mat(1.f, 1.f, 2.f, 0.f, Vec3Df(242/255.f, 209/255.f, 116/255.f));
+    Material box3Mat(1.f, 1.f, 2.f, 0.f, boxColor);
     Object box3 (box3Mesh, box3Mat);
     box3.setTrans(Vec3Df(-1.3f, 2.6f, 0.f));
     objects.push_back (box3);

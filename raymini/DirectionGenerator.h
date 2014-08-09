@@ -3,7 +3,6 @@
 
 #include "Vec3D.h"
 #include <vector>
-#include <math.h>
 
 
 // A class to compute the directions of the ray used by the ray tracer
